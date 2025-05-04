@@ -17,6 +17,14 @@ app.get("/", (req, res) => {
 
 app.use("/", routes);
 
+app.use((err, req, res, next) => {
+  const status = err.statusCode || 500;
+  res.status(status).json({
+    status: "error",
+    message: err.message || "Internal Server Error",
+  });
+});
+
 app.listen(port, () => {
   console.log(`beebsafe server is listening at ${port}`);
 });
