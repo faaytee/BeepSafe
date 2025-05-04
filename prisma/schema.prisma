@@ -19,5 +19,16 @@ model User{
   lastName String
   email String @unique
   password String
+  reports Report[]
   
+}
+
+model Report{
+  id Int @id @default(autoincrement())
+  title String
+  description String
+  location String
+  userId Int
+  user User @relation(fields: [userId], references: [id]) 
+  createdAt DateTime @default(now())
 }
