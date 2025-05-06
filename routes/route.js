@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
 const reportController = require("../controllers/reportController");
+const newsletterController = require("../controllers/newsletterController"); 
+const contactController = require("../controllers/contactController");
+
 
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
@@ -22,6 +25,18 @@ router.get('/reset-password', (req, res) => {
       </form>
     `);
   });
+
+  /** DO THIS FOR FRONTEND INTEGRATION
+   * router.get('/reset-password', (req, res) => {
+  const { token } = req.query;
+  res.redirect(`http://your-frontend.com/reset-password?token=${token}`);
+});
+   * 
+   * 
+   */
+router.post("/newsletter/subscribe", newsletterController.subscribe);
+router.post("/newsletter/unsubscribe", newsletterController.unsubscribe);
+router.post("/contact", contactController.submitMessage);
 
 
 module.exports = router;

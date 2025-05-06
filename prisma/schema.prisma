@@ -49,3 +49,21 @@ model Report{
   user User @relation(fields: [userId], references: [id]) 
   createdAt DateTime @default(now())
 }
+
+model NewsletterSubscriber {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  isConfirmed  Boolean  @default(true) // Set to true by default since we're skipping confirmation
+  createdAt    DateTime @default(now())
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String
+  phoneNumber String
+  subject String
+  message   String
+  createdAt DateTime @default(now())
+}
