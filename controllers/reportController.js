@@ -32,4 +32,11 @@ const reports = async (req, res, next) => {
   }
 };
 
+// const trustedUsers = (req, res, next) => {
+//   try {
+//   } catch (error) {
+//     console.log(error);
+//     next(error);
+//   }
+// };
 module.exports = { reports };
