@@ -7,10 +7,36 @@ const { mail } = require("./sendMail");
 
 const signup = async (req, res, next) => {
   try {
+    console.log("Raw request body:", req.body);
     const { firstName, lastName, email, password } = req.body;
-    if (!firstName || !lastName || !email || !password) {
-      return next(new AppError("missing fields", 400));
+    console.log("Destructured values:", { firstName, lastName, email, password });
+
+    // Log the truthiness of each field
+    console.log("Field checks:", {
+      firstNameExists: !!firstName,
+      lastNameExists: !!lastName,
+      emailExists: !!email,
+      passwordExists: !!password,
+      firstNameEmpty: firstName ? firstName.trim() === "" : true,
+      lastNameEmpty: lastName ? lastName.trim() === "" : true,
+      emailEmpty: email ? email.trim() === "" : true,
+      passwordEmpty: password ? password.trim() === "" : true,
+    });
+
+    // Updated validation
+    if (
+      firstName === undefined ||
+      lastName === undefined ||
+      email === undefined ||
+      password === undefined ||
+      (firstName && firstName.trim() === "") ||
+      (lastName && lastName.trim() === "") ||
+      (email && email.trim() === "") ||
+      (password && password.trim() === "")
+    ) {
+      return next(new AppError("missing or empty fields", 400));
     }
+
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) return next(new AppError("email already exist", 400));
 
@@ -30,12 +56,11 @@ const signup = async (req, res, next) => {
       },
     });
 
-    const verificationLink = `http://localhost:3000/verify?token=${verificationToken}`;
+    const verificationLink = `http://localhost:3000/api/verifyEmail?token=${verificationToken}`;
     console.log("Token:", verificationToken);
 
     const subject = "Verify your email";
-    const htmlContent = `<p>Click the link below to verify your email:</p><a href="${verificationLink}">${verificationLink}</a>
-    `;
+    const htmlContent = `<p>Click the link below to verify your email:</p><a href="${verificationLink}">${verificationLink}</a>`;
 
     console.log("Sending email to:", addUser.email);
 
@@ -120,4 +145,98 @@ const login = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, verifyEmail };
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return next(new AppError("Email is required", 400));
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    const expiry = Date.now() + 60 * 60 * 1000;
+
+    const updatedUser = await prisma.user.update({
+      where: { email },
+      data: {
+        resetToken: token,
+        resetTokenExpiry: BigInt(expiry),
+      },
+    });
+
+    console.log("Updated user with reset token:", {
+      email: updatedUser.email,
+      resetToken: updatedUser.resetToken,
+      resetTokenExpiry: updatedUser.resetTokenExpiry,
+    });
+
+    const resetLink = `${process.env.BASE_URL}/api/reset-password?token=${token}`;
+
+    const subject = "Password Reset Request";
+    const htmlContent = `<p>Click the link below to reset your password:</p><a href="${resetLink}">${resetLink}</a>`;
+
+    await mail(email, subject, htmlContent);
+
+    res.status(200).json({ message: "Password reset link sent to your email" });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
+// Add the resetPassword function here
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return next(new AppError("Token and new password are required", 400));
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+    });
+
+    console.log("User fetched for reset:", {
+      id: user?.id,
+      email: user?.email,
+      resetToken: user?.resetToken,
+      resetTokenExpiry: user?.resetTokenExpiry,
+      providedToken: token,
+      currentTime: BigInt(Date.now()),
+      tokenMatches: user ? user.resetToken === token : false,
+      tokenExpired: user ? user.resetTokenExpiry < BigInt(Date.now()) : true,
+    });
+
+    if (!user || user.resetToken !== token || user.resetTokenExpiry < BigInt(Date.now())) {
+      return next(new AppError("Invalid or expired token", 400));
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
+    });
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
+module.exports = { signup, login, verifyEmail, forgotPassword, resetPassword };

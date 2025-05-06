@@ -13,16 +13,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id  Int @id @default(autoincrement()) 
-  firstName String
-  lastName String
-  email String @unique
-  password String
-  isVerified Boolean @default(false)
-  verificationToken String?
-  reports Report[]
-  
+model User {
+  // Primary Identifier
+  id                 Int      @id @default(autoincrement())
+
+  // Basic Info
+  firstName          String
+  lastName           String
+  email              String   @unique
+  password           String
+  phone              String?  // Optional, for SMS reset later
+
+  // Account Status
+  isVerified         Boolean  @default(false)
+  verificationToken  String?
+
+  // Password Reset
+  resetToken         String?
+  resetTokenExpiry   BigInt?
+
+  // Relations
+  reports            Report[]
+
+  // Timestamps
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model Report{
