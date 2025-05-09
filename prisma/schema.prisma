@@ -38,6 +38,7 @@ model User {
   // Timestamps
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+  invites          Invite[] // Add relation to Invite model
 }
 
 model Report{
@@ -48,7 +49,7 @@ model Report{
   userId Int
   user User @relation(fields: [userId], references: [id]) 
   createdAt DateTime @default(now())
-}
+  }
 
 model NewsletterSubscriber {
   id           Int      @id @default(autoincrement())
@@ -66,4 +67,12 @@ model ContactMessage {
   subject String
   message   String
   createdAt DateTime @default(now())
+}
+model Invite {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique // The encrypted invite code
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  isUsed      Boolean  @default(false) // Track if the invite has been used
+  createdAt   DateTime @default(now())
 }

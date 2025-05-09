@@ -4,6 +4,8 @@ const authController = require("../controllers/authController");
 const reportController = require("../controllers/reportController");
 const newsletterController = require("../controllers/newsletterController"); 
 const contactController = require("../controllers/contactController");
+const inviteController = require("../controllers/inviteController"); // Add this
+const { authenticateToken } = require("../middleware/authmiddleware"); // Add this
 
 
 router.post("/signup", authController.signup);
@@ -37,6 +39,8 @@ router.get('/reset-password', (req, res) => {
 router.post("/newsletter/subscribe", newsletterController.subscribe);
 router.post("/newsletter/unsubscribe", newsletterController.unsubscribe);
 router.post("/contact", contactController.submitMessage);
+router.post("/invite-friends", authenticateToken, inviteController.generateInvite);
+
 
 
 module.exports = router;
