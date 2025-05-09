@@ -5,9 +5,9 @@ const prisma = new PrismaClient();
 
 const reports = async (req, res, next) => {
   try {
-    const { title, description, location } = req.body;
+    const { userId, title, description, location } = req.body;
 
-    if (!title || !description || !location) {
+    if (!userId || !title || !description || !location) {
       return next(new AppError("all fields are required", 400));
     }
     const addReport = await prisma.report.create({
@@ -15,6 +15,7 @@ const reports = async (req, res, next) => {
         title,
         description,
         location,
+        user: { connect: { id: userId } },
       },
     });
 
@@ -32,11 +33,26 @@ const reports = async (req, res, next) => {
   }
 };
 
-// const trustedUsers = (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.log(error);
-//     next(error);
-//   }
-// };
-module.exports = { reports };
+const getUserReports = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    const reports = await prisma.report.findMany({
+      where: { userId: Number(userId) },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (reports.length === 0) {
+      return next(AppError("no reports found for this user", 400));
+    }
+
+    res.status(200).json({
+      message: "reports sucessfully retrieved",
+      data: reports,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { reports, getUserReports };

@@ -11,6 +11,13 @@ const signup = async (req, res, next) => {
     if (!firstName || !lastName || !email || !password) {
       return next(new AppError("missing fields", 400));
     }
+
+    // ✅ Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return next(new AppError("Invalid email format", 400));
+    }
+
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) return next(new AppError("email already exist", 400));
 
@@ -120,4 +127,10 @@ const login = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, verifyEmail };
+const logout = (req, res, next) => {
+  res.status(201).json({
+    message: "logout successful",
+  });
+};
+
+module.exports = { signup, login, verifyEmail, logout };
