@@ -6,7 +6,24 @@ const newsletterController = require("../controllers/newsletterController");
 const contactController = require("../controllers/contactController");
 const inviteController = require("../controllers/inviteController"); // Add this
 const { authenticateToken } = require("../middleware/authmiddleware"); // Add this
+const {
+  signup,
+  login,
+  verifyEmail,
+  logout,
+} = require("../controllers/authController");
+const { reports, getUserReports } = require("../controllers/reportController");
+const { myCircle } = require("../controllers/trustedCircle");
+const { emergencyBtn } = require("../controllers/emergency");
 
+router.post("/signup", signup);
+router.post("/login", login);
+router.get("/verifyEmail", verifyEmail);
+router.post("/reports", reports);
+router.post("/myCircle", myCircle);
+router.get("/getUserReports/:userId", getUserReports);
+router.get("/logout", logout);
+router.get("/emergencyBtn/:userId", emergencyBtn);
 
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
