@@ -13,6 +13,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+<<<<<<< HEAD
+model User {
+  // Primary Identifier
+  id                 Int      @id @default(autoincrement())
+
+  // Basic Info
+  firstName          String
+  lastName           String
+  email              String   @unique
+  password           String
+  phone              String?  // Optional, for SMS reset later
+
+  // Account Status
+  isVerified         Boolean  @default(false)
+  verificationToken  String?
+
+  // Password Reset
+  resetToken         String?
+  resetTokenExpiry   BigInt?
+
+  // Relations
+  reports            Report[]
+
+  // Timestamps
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  invites          Invite[] // Add relation to Invite model
+=======
 model User{
   id  Int @id @default(autoincrement()) 
   firstName String
@@ -24,6 +52,7 @@ model User{
   reports Report[]
   trustedCircle TrustedCircle[]
   
+>>>>>>> faaytee/main
 }
 
 model Report{
@@ -34,8 +63,34 @@ model Report{
   userId Int
   user User @relation(fields: [userId], references: [id]) 
   createdAt DateTime @default(now())
+  }
+
+model NewsletterSubscriber {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  isConfirmed  Boolean  @default(true) // Set to true by default since we're skipping confirmation
+  createdAt    DateTime @default(now())
 }
 
+<<<<<<< HEAD
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String
+  phoneNumber String
+  subject String
+  message   String
+  createdAt DateTime @default(now())
+}
+model Invite {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique // The encrypted invite code
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  isUsed      Boolean  @default(false) // Track if the invite has been used
+  createdAt   DateTime @default(now())
+=======
 
 model TrustedCircle{
   id Int @id  @default(autoincrement())
@@ -45,4 +100,5 @@ model TrustedCircle{
   email String @unique
   userId Int
   user User @relation(fields: [userId], references: [id])
+>>>>>>> faaytee/main
 }

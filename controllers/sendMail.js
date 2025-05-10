@@ -12,17 +12,20 @@ const mail = async function (toEmail, subject, htmlContent) {
         pass: process.env.MAIL_PASSWORD,
       },
     });
+
     const info = await transporter.sendMail({
-      from: "faithbassey020@gmail.com",
+      from: process.env.MAIL_USER, // Use the MAIL_USER from .env instead of hardcoding
       to: toEmail,
       subject: subject,
       html: htmlContent,
     });
-    console.log(`email sent to: ${toEmail}`);
-    console.log(`message id: ${info.messageId} `);
+
+    console.log(`Email sent to: ${toEmail}`);
+    console.log(`Message ID: ${info.messageId}`);
   } catch (error) {
-    console.error(`error sending email to: ${toEmail}`, error);
-    throw new Error(`failed to send email`);
+    console.error(`Error sending email to: ${toEmail}`, error);
+    throw new Error(`Failed to send email: ${error.message}`); // Include the error message for better debugging
   }
 };
+
 module.exports = { mail };
