@@ -257,4 +257,3 @@ const logout = (req, res, next) => {
 };
 
 module.exports = { signup, login, verifyEmail, logout };
-faaytee/main
