@@ -90,7 +90,8 @@ model Invite {
   user        User     @relation(fields: [userId], references: [id])
   isUsed      Boolean  @default(false) // Track if the invite has been used
   createdAt   DateTime @default(now())
-=======
+  
+}
 
 model TrustedCircle{
   id Int @id  @default(autoincrement())
