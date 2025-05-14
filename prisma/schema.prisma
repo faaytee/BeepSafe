@@ -21,9 +21,18 @@ model User{
   password String
   isVerified Boolean @default(false)
   verificationToken String?
+
+   // Password Reset
+  resetToken         String?
+  resetTokenExpiry   BigInt?
+
+
   reports Report[]
+  invites            Invite[]
   trustedCircle TrustedCircle[]
-  
+  // Timestamps
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 }
 
 model Report{
@@ -31,11 +40,42 @@ model Report{
   title String
   description String
   location String
+  latitude    Float?   // New field: Latitude of the incident
+  longitude   Float?   // New field: Longitude of the incident
   userId Int
   user User @relation(fields: [userId], references: [id]) 
-  createdAt DateTime @default(now())
+  // Timestamps
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 }
 
+
+model NewsletterSubscriber {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  isConfirmed  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model ContactMessage {
+  id          Int      @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  email       String
+  phoneNumber String
+  subject     String
+  message     String
+  createdAt   DateTime @default(now())
+}
+
+model Invite {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  isUsed      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
 
 model TrustedCircle{
   id Int @id  @default(autoincrement())
@@ -45,4 +85,17 @@ model TrustedCircle{
   email String @unique
   userId Int
   user User @relation(fields: [userId], references: [id])
+}
+
+model SecurityAgency {
+  id        Int      @id @default(autoincrement())
+  state     String
+  type      String
+  name      String
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+
+  @@index([state])
+  @@index([type])
 }
