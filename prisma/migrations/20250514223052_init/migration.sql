@@ -1,30 +1,35 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE `User` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `firstName` VARCHAR(191) NOT NULL,
+    `lastName` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `isVerified` BOOLEAN NOT NULL DEFAULT false,
+    `verificationToken` VARCHAR(191) NULL,
+    `resetToken` VARCHAR(191) NULL,
+    `resetTokenExpiry` BIGINT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
-  - You are about to drop the column `LastName` on the `trustedcircle` table. All the data in the column will be lost.
-  - You are about to drop the column `PhoneNumber` on the `trustedcircle` table. All the data in the column will be lost.
-  - Added the required column `updatedAt` to the `Report` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `lastName` to the `TrustedCircle` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `phoneNumber` to the `TrustedCircle` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `updatedAt` to the `User` table without a default value. This is not possible if the table is not empty.
+    UNIQUE INDEX `User_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-*/
--- AlterTable
-ALTER TABLE `report` ADD COLUMN `latitude` DOUBLE NULL,
-    ADD COLUMN `longitude` DOUBLE NULL,
-    ADD COLUMN `updatedAt` DATETIME(3) NOT NULL;
+-- CreateTable
+CREATE TABLE `Report` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(191) NOT NULL,
+    `location` VARCHAR(191) NOT NULL,
+    `latitude` DOUBLE NULL,
+    `longitude` DOUBLE NULL,
+    `userId` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
--- AlterTable
-ALTER TABLE `trustedcircle` DROP COLUMN `LastName`,
-    DROP COLUMN `PhoneNumber`,
-    ADD COLUMN `lastName` VARCHAR(191) NOT NULL,
-    ADD COLUMN `phoneNumber` VARCHAR(191) NOT NULL;
-
--- AlterTable
-ALTER TABLE `user` ADD COLUMN `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    ADD COLUMN `resetToken` VARCHAR(191) NULL,
-    ADD COLUMN `resetTokenExpiry` BIGINT NULL,
-    ADD COLUMN `updatedAt` DATETIME(3) NOT NULL;
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `NewsletterSubscriber` (
@@ -64,6 +69,19 @@ CREATE TABLE `Invite` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `TrustedCircle` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `firstName` VARCHAR(191) NOT NULL,
+    `lastName` VARCHAR(191) NOT NULL,
+    `phoneNumber` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `userId` INTEGER NOT NULL,
+
+    UNIQUE INDEX `TrustedCircle_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `SecurityAgency` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `state` VARCHAR(191) NOT NULL,
@@ -79,4 +97,10 @@ CREATE TABLE `SecurityAgency` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
+ALTER TABLE `Report` ADD CONSTRAINT `Report_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `Invite` ADD CONSTRAINT `Invite_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `TrustedCircle` ADD CONSTRAINT `TrustedCircle_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
