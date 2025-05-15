@@ -37,7 +37,9 @@ const signup = async (req, res, next) => {
       },
     });
 
-    const verificationLink = `http://localhost:3000/verify?token=${verificationToken}`;
+    // const verificationLink = `http://localhost:3000/verify?token=${verificationToken}`;
+    const verificationLink = `https://beepsafe.onrender.com/verifyEmail?token=${verificationToken}`;
+
     console.log("Token:", verificationToken);
 
     const subject = "Verify your email";
