@@ -162,7 +162,7 @@ const forgotPassword = async (req, res, next) => {
       resetTokenExpiry: updatedUser.resetTokenExpiry,
     });
 
-    const resetLink = `${process.env.BASE_URL}/api/reset-password?token=${token}`;
+    const resetLink = `${process.env.FRONTEND_URL}/resetpassword.html?token=${token};`;
 
     const subject = "Password Reset Request";
     const htmlContent = `<p>Click the link below to reset your password:</p><a href="${resetLink}">${resetLink}</a>`;
