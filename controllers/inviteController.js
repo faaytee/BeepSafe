@@ -42,7 +42,7 @@ const generateInvite = async (req, res, next) => {
     console.log("Invite created in database:", invite); // Debug: Log the created invite
 
     // Generate the invite link
-    const inviteLink = `https://beepsafe.com?inviteCode=${encryptedCode}`;
+    const inviteLink =`https://beep-safe.vercel.app?inviteCode=${encryptedCode}`;
 
     // Friendly message
     const friendlyMessage =
