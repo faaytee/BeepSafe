@@ -5,24 +5,26 @@ const mail = async function (toEmail, subject, htmlContent) {
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
-      port: process.env.MAIL_PORT,
+      port: Number(process.env.MAIL_PORT),
       secure: true,
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASSWORD,
       },
     });
+
     const info = await transporter.sendMail({
       from: "beepsafecommunity@gmail.com",
       to: toEmail,
-      subject: subject,
+      subject,
       html: htmlContent,
     });
-    console.log(`email sent to: ${toEmail}`);
-    console.log(`message id: ${info.messageId} `);
+
+    console.log(`✅ Email sent to: ${toEmail} — Message ID: ${info.messageId}`);
   } catch (error) {
-    console.error(`error sending email to: ${toEmail}`, error);
-    throw new Error(`failed to send email`);
+    console.error(` Failed to send email to ${toEmail}:, error`);
+    throw error; // Let the calling controller handle the error
   }
 };
+
 module.exports = { mail };

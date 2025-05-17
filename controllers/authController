@@ -8,18 +8,18 @@ const { mail } = require("./sendMail");
 const signup = async (req, res, next) => {
   try {
     const { firstName, lastName, email, password } = req.body;
+
     if (!firstName || !lastName || !email || !password) {
-      return next(new AppError("missing fields", 400));
+      return next(new AppError("Missing required fields", 400));
     }
 
-    // ✅ Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return next(new AppError("Invalid email format", 400));
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) return next(new AppError("email already exist", 400));
+    if (existingUser) return next(new AppError("Email already exists", 400));
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -27,7 +27,7 @@ const signup = async (req, res, next) => {
       expiresIn: "7d",
     });
 
-    const addUser = await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         firstName,
         lastName,
@@ -37,30 +37,29 @@ const signup = async (req, res, next) => {
       },
     });
 
-    // const verificationLink = `http://localhost:3000/verify?token=${verificationToken}`;
     const verificationLink = `https://beepsafe.onrender.com/verifyEmail?token=${verificationToken}`;
-
-    console.log("Token:", verificationToken);
-
     const subject = "Verify your email";
-    const htmlContent = `<p>Click the link below to verify your email:</p><a href="${verificationLink}">${verificationLink}</a>
-    `;
+    const htmlContent = `<p>Click the link to verify your email:</p><a href=${verificationLink}>${verificationLink}</a>`;
 
-    console.log("Sending email to:", addUser.email);
-
-    await mail(addUser.email, subject, htmlContent);
+    try {
+      await mail(newUser.email, subject, htmlContent);
+    } catch (err) {
+      // Rollback user creation if email fails
+      await prisma.user.delete({ where: { id: newUser.id } });
+      return next(new AppError("Failed to send verification email", 500));
+    }
 
     res.status(201).json({
-      message: "verification mail sent. Please check inbox",
+      message: "Verification mail sent. Please check your inbox.",
       user: {
-        id: addUser.id,
-        firstName: addUser.firstName,
-        lastName: addUser.lastName,
-        email: addUser.email,
+        id: newUser.id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error("Signup error:", error);
     next(error);
   }
 };
@@ -68,7 +67,6 @@ const signup = async (req, res, next) => {
 const verifyEmail = async (req, res) => {
   try {
     const { token } = req.query;
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await prisma.user.findUnique({
@@ -90,9 +88,9 @@ const verifyEmail = async (req, res) => {
     res.status(200).json({ message: "Email successfully verified" });
   } catch (err) {
     if (err.name === "TokenExpiredError") {
-      return res
-        .status(400)
-        .json({ message: "Verification link expired, please signin again" });
+      return res.status(400).json({
+        message: "Verification link expired, please sign up again.",
+      });
     }
     res.status(400).json({ message: "Invalid or expired token" });
   }
@@ -101,20 +99,28 @@ const verifyEmail = async (req, res) => {
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return next(new AppError("missing fields", 400));
+
+    if (!email || !password)
+      return next(new AppError("Missing email or password", 400));
 
     const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return next(new AppError("Invalid email", 400));
 
-    if (!user) return next(new AppError("invalid email"));
+    if (!user.isVerified) {
+      return next(
+        new AppError("Please verify your email before logging in", 403)
+      );
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return next(new AppError("invalid password"));
+    if (!isMatch) return next(new AppError("Invalid password", 400));
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
+
     res.status(200).json({
-      message: "logged in successfully",
+      message: "Logged in successfully",
       user: {
         id: user.id,
         firstname: user.firstName,
@@ -124,7 +130,7 @@ const login = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Login error:", error);
     next(error);
   }
 };
@@ -162,7 +168,7 @@ const forgotPassword = async (req, res, next) => {
       resetTokenExpiry: updatedUser.resetTokenExpiry,
     });
 
-    const resetLink = `${process.env.BASE_URL}/api/reset-password?token=${token}`;
+    const resetLink = `${process.env.FRONTEND_URL}/resetpassword.html?token=${token};`;
 
     const subject = "Password Reset Request";
     const htmlContent = `<p>Click the link below to reset your password:</p><a href="${resetLink}">${resetLink}</a>`;
